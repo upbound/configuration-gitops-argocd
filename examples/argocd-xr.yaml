@@ -1,0 +1,13 @@
+apiVersion: gitops.platform.upbound.io/v1alpha1
+kind: XArgo
+metadata:
+  name: configuration-gitops-argocd
+spec:
+  parameters:
+    providerConfigName: configuration-gitops-argocd
+    source:
+      git:
+        url: https://github.com/haarchri/gitops-argocd.git
+        path: configuration-gitops-argocd/infrastructure.yaml
+        ref:
+          name: HEAD

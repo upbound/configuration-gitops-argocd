@@ -1,0 +1,248 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xargo.gitops.platform.upbound.io
+  labels:
+    type: gitops
+spec:
+  writeConnectionSecretsToNamespace: upbound-system
+  compositeTypeRef:
+    apiVersion: gitops.platform.upbound.io/v1alpha1
+    kind: XArgo
+  patchSets:
+    - name: Common
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels
+          toFieldPath: metadata.labels
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.annotations
+          toFieldPath: metadata.annotations
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.providerConfigName
+          toFieldPath: spec.providerConfigRef.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.deletionPolicy
+          toFieldPath: spec.deletionPolicy
+  resources:
+    - name: releaseArgo
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        spec:
+          forProvider:
+            namespace: argocd
+            chart:
+              name: argo-cd
+              repository: https://argoproj.github.io/argo-helm
+            values:
+              dex:
+                enabled: false
+              redis-ha:
+                enabled: true
+              controller:
+                replicas: 1
+                metrics:
+                  enabled: true
+                  service:
+                    annotations:
+                      prometheus.io/scrape: true
+                env:
+                - name: ARGOCD_K8S_CLIENT_QPS
+                  value: "300"
+              repoServer:
+                autoscaling:
+                  enabled: true
+                  minReplicas: 1
+                resources:
+                  requests:
+                    cpu : "100m"
+                    memory : "256Mi"
+                  limits:
+                    cpu: "200m"
+                    memory: "512Mi"
+                metrics:
+                  enabled: true
+                  service:
+                    annotations:
+                      prometheus.io/scrape: true
+              applicationSet:
+                replicaCount: 1
+                metrics:
+                  enabled: true
+                  service:
+                    annotations:
+                      prometheus.io/scrape: true
+              server:
+                autoscaling:
+                  enabled: true
+                  minReplicas: 1
+                resources:
+                  requests:
+                    cpu : "100m"
+                    memory : "256Mi"
+                  limits:
+                    cpu: "200m"
+                    memory: "512Mi"
+                metrics:
+                  enabled: true
+                  service:
+                    annotations:
+                      prometheus.io/scrape: true
+                service:
+                  type: "LoadBalancer"
+              configs:
+                params:
+                  application.namespaces: "cluster-*"
+                cm:
+                  application.resourceTrackingMethod: "annotation"
+                  resource.exclusions: |
+                    - kinds:
+                      - ProviderConfigUsage
+                      apiGroups:
+                      - "*"
+                  resource.customizations: |
+                    "*.upbound.io/*":
+                      health.lua: |
+                        health_status = {
+                          status = "Progressing",
+                          message = "Provisioning ..."
+                        }
+
+                        if obj.status == nil or obj.status.conditions == nil then
+                          return health_status
+                        end
+
+                        for i, condition in ipairs(obj.status.conditions) do
+                          if condition.type == "LastAsyncOperation" then
+                            if condition.status == "False" then
+                              health_status.status = "Degraded"
+                              health_status.message = condition.message
+                              return health_status
+                            end
+                          end
+
+                          if condition.type == "Synced" then
+                            if condition.status == "False" then
+                              health_status.status = "Degraded"
+                              health_status.message = condition.message
+                              return health_status
+                            end
+                          end
+
+                          if condition.type == "Ready" then
+                            if condition.status == "True" then
+                              health_status.status = "Healthy"
+                              health_status.message = "Resource is up-to-date."
+                              return health_status
+                            end
+                          end
+                        end
+
+                        return health_status
+
+                    "*.crossplane.io/*":
+                      health.lua: |
+                        health_status = {
+                          status = "Progressing",
+                          message = "Provisioning ..."
+                        }
+
+                        if obj.status == nil or obj.status.conditions == nil then
+                          return health_status
+                        end
+
+                        for i, condition in ipairs(obj.status.conditions) do
+                          if condition.type == "LastAsyncOperation" then
+                            if condition.status == "False" then
+                              health_status.status = "Degraded"
+                              health_status.message = condition.message
+                              return health_status
+                            end
+                          end
+
+                          if condition.type == "Synced" then
+                            if condition.status == "False" then
+                              health_status.status = "Degraded"
+                              health_status.message = condition.message
+                              return health_status
+                            end
+                          end
+
+                          if condition.type == "Ready" then
+                            if condition.status == "True" then
+                              health_status.status = "Healthy"
+                              health_status.message = "Resource is up-to-date."
+                              return health_status
+                            end
+                          end
+                        end
+
+                        return health_status
+      patches:
+        - type: PatchSet
+          patchSetName: Common
+        - fromFieldPath: spec.parameters.operators.argocd.version
+          toFieldPath: spec.forProvider.chart.version
+        - fromFieldPath: spec.parameters.providerConfigName
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - type: match
+              match:
+                patterns:
+                  - type: regexp
+                    regexp: '.*'
+                    result: argocd
+
+    - name: argoApplicationSet
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: argoproj.io/v1alpha1
+              kind: ApplicationSet
+              metadata:
+                namespace: argocd
+              spec:
+                goTemplate: true
+                goTemplateOptions: ["missingkey=error"]
+                generators:
+                  - matrix:
+                      generators:
+                        - git: {}
+                        - list:
+                            # https://github.com/argoproj/argo-cd/issues/15341
+                            elements: []
+                            elementsYaml: "{{ .key.components | toJson }}"
+                template:
+                  metadata:
+                    name: '{{.name}}'
+                  spec:
+                    project: default
+                    syncPolicy:
+                      automated:
+                        selfHeal: true    
+                      syncOptions:
+                      - CreateNamespace=true        
+                    sources:
+                      - chart: '{{.chart}}'
+                        repoURL: '{{.repoUrl}}'
+                        targetRevision: '{{.version}}'
+                        helm:
+                          releaseName: '{{.releaseName}}'
+                    destination:
+                      server: https://kubernetes.default.svc
+                      namespace: '{{.namespace}}'
+      patches:
+        - type: PatchSet
+          patchSetName: Common
+        - fromFieldPath: spec.parameters.providerConfigName
+          toFieldPath: spec.forProvider.manifest.metadata.name
+        - fromFieldPath: spec.parameters.source.git.url
+          toFieldPath: spec.forProvider.manifest.spec.generators[0].matrix.generators[0].git.repoURL
+        - fromFieldPath: spec.parameters.source.git.path
+          toFieldPath: spec.forProvider.manifest.spec.generators[0].matrix.generators[0].git.files[0].path
+        - fromFieldPath: spec.parameters.source.git.ref.name
+          toFieldPath: spec.forProvider.manifest.spec.generators[0].matrix.generators[0].git.revision
