@@ -26,3 +26,8 @@ echo "Adding provider-helm Service Account permissions"
 SA=$("${KUBECTL}" -n ${CROSSPLANE_NAMESPACE} get sa -o name|grep provider-helm | sed -e "s|serviceaccount\/|${CROSSPLANE_NAMESPACE}:|g")
 "${KUBECTL}" create clusterrolebinding provider-helm-admin-binding --clusterrole cluster-admin --serviceaccount="${SA}"
 echo "Added provider-helm Service Account permissions"
+
+echo "Adding provider-kubernetes Service Account permissions"
+SA=$("${KUBECTL}" -n ${CROSSPLANE_NAMESPACE} get sa -o name|grep provider-kubernetes | sed -e "s|serviceaccount\/|${CROSSPLANE_NAMESPACE}:|g")
+"${KUBECTL}" create clusterrolebinding provider-kubernetes-admin-binding --clusterrole cluster-admin --serviceaccount="${SA}"
+echo "Added provider-kubernetes Service Account permissions"
