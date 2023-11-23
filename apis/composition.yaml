@@ -182,6 +182,10 @@ spec:
       patches:
         - type: PatchSet
           patchSetName: Common
+        - fromFieldPath: spec.parameters.ingressUrl
+          toFieldPath: spec.forProvider.values.server.url
+        - fromFieldPath: spec.parameters.oidcConfig
+          toFieldPath: spec.forProvider.values.server.config.oidc.config
         - fromFieldPath: spec.parameters.operators.argocd.version
           toFieldPath: spec.forProvider.chart.version
         - fromFieldPath: spec.parameters.providerConfigName

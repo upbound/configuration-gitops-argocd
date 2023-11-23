@@ -25,6 +25,12 @@ spec:
                     providerConfigName:
                       type: string
                       description: Crossplane ProviderConfig to use for provisioning this resources
+                    ingressUrl:
+                      type: string
+                      description: set ingressUrl for argocd server
+                    oidcConfig:
+                      type: string
+                      description: set oidc config for argocd server
                     deletionPolicy:
                       description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
                       enum:

@@ -4,6 +4,14 @@ metadata:
   name: configuration-gitops-argocd
 spec:
   parameters:
+    # this configuration is needed if you want to configure argocd with oidc
+    # ingressUrl: argocd-platform-ref-aws-cnoe.upboundrocks.cloud
+    # oidcConfig: |
+    #   name: Keycloak
+    #   issuer: https://keycloak-platform-ref-aws-cnoe.upboundrocks.cloud/realms/master
+    #   clientID: argocd
+    #   clientSecret: 0000000000000000000
+    #   requestedScopes: ['openid', 'profile', 'email', 'groups']
     providerConfigName: configuration-gitops-argocd
     source:
       git:
