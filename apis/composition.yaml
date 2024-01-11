@@ -194,6 +194,14 @@ spec:
                 fromFieldPath: spec.parameters.ingressUrl
                 toFieldPath: spec.forProvider.values.server.url
               - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.ingressUrl
+                toFieldPath: spec.forProvider.values.configs.cm.url
+                transforms:
+                  - string:
+                      fmt: 'https://%s'
+                      type: Format
+                    type: string
+              - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.oidcConfig
                 toFieldPath: spec.forProvider.values.server.config[oidc.config]
               - type: FromCompositeFieldPath
