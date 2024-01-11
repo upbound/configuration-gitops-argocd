@@ -13,7 +13,7 @@ PLATFORMS ?= linux_amd64
 
 UP_VERSION = v0.21.0
 UP_CHANNEL = stable
-UPTEST_VERSION = v0.6.1
+UPTEST_VERSION = v0.9.0
 
 -include build/makelib/k8s_tools.mk
 # ====================================================================================
@@ -61,9 +61,17 @@ build.init: $(UP)
 # This target requires the following environment variables to be set:
 uptest: $(UPTEST) $(KUBECTL) $(KUTTL)
 	@$(INFO) running automated tests
-	@KUBECTL=$(KUBECTL) KUTTL=$(KUTTL) $(UPTEST) e2e examples/argocd-xr.yaml --setup-script=test/setup.sh --default-timeout=2400 || $(FAIL)
+	@KUBECTL=$(KUBECTL) KUTTL=$(KUTTL) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) $(UPTEST) e2e examples/argocd-xr.yaml --setup-script=test/setup.sh --default-timeout=2400 || $(FAIL)
 	@$(OK) running automated tests
 
 e2e: build controlplane.up local.xpkg.deploy.configuration.$(PROJECT_NAME) uptest
 
-.PHONY: uptest e2e
+render:
+	crossplane beta render examples/argocd-xr.yaml apis/composition.yaml examples/functions.yaml -r
+
+yamllint:
+	@$(INFO) running yamllint
+	@yamllint ./apis || $(FAIL)
+	@$(OK) running yamllint
+
+.PHONY: uptest e2e render yamllint
