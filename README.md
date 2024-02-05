@@ -12,8 +12,8 @@ The core components of a custom API in [Crossplane](https://docs.crossplane.io/v
 
 In this specific configuration, the ArgoCD API contains:
 
-- **an ArgoCD (/apis/definition.yaml) custom resource type.**
-- **Composition of the ArgoCD resources:** Configured in [/apis/composition.yaml](/apis/composition.yaml), it provisions an ArgoCDand resources in the `upbound-system` namespace.
+- **an [ArgoCD](/apis/definition.yaml) custom resource type.**
+- **Composition of the ArgoCD resources:** Configured in [/apis/composition.yaml](/apis/composition.yaml), it provisions ArgoCD resources in the `upbound-system` namespace.
 
 This repository contains an Composite Resource (XR) file.
 
