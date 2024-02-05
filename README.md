@@ -1,7 +1,7 @@
-# [] Configuration
+# ArgoCD Configuration
 
 
-This repository contains a [Crossplane configuration](https://docs.crossplane.io/v1.11/concepts/packages/#configuration-packages), tailored for users establishing their initial control plane with [Upbound](https://cloud.upbound.io). This configuration deploys fully managed []() instances.
+This repository contains a [Crossplane configuration](https://docs.crossplane.io/v1.11/concepts/packages/#configuration-packages), tailored for users establishing their initial control plane with [Upbound](https://cloud.upbound.io). This configuration deploys fully managed ArgoCD resources.
 
 ## Overview
 
@@ -10,10 +10,10 @@ The core components of a custom API in [Crossplane](https://docs.crossplane.io/v
 - **CompositeResourceDefinition (XRD):** Defines the API's structure.
 - **Composition(s):** Implements the API by orchestrating a set of Crossplane managed resources.
 
-In this specific configuration, the [EKS] API contains:
+In this specific configuration, the ArgoCD API contains:
 
-- **an [](/apis/definition.yaml) custom resource type.**
-- **Composition of the [] resources:** Configured in [/apis/composition.yaml](/apis/composition.yaml), it provisions an [] and resources in the `upbound-system` namespace.
+- **an ArgoCD (/apis/definition.yaml) custom resource type.**
+- **Composition of the ArgoCD resources:** Configured in [/apis/composition.yaml](/apis/composition.yaml), it provisions an ArgoCDand resources in the `upbound-system` namespace.
 
 This repository contains an Composite Resource (XR) file.
 
