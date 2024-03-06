@@ -5,17 +5,39 @@ metadata:
 spec:
   parameters:
     # this configuration is needed if you want to configure argocd with oidc
-    # ingressUrl: argocd-platform-ref-aws-cnoe.upboundrocks.cloud
+    # ingressUrl: configuration-gitops-argocd.example.com
     # oidcConfig: |
     #   name: Keycloak
-    #   issuer: https://keycloak-platform-ref-aws-cnoe.upboundrocks.cloud/realms/master
+    #   issuer: https://configuration-gitops-argocd.example.com/realms/master
     #   clientID: argocd
     #   clientSecret: 0000000000000000000
     #   requestedScopes: ['openid', 'profile', 'email', 'groups']
+    resourceExclusions: |
+      - kinds:
+        - ProviderConfigUsage
+        apiGroups:
+        - "*"
+      - kinds:
+        - "Nodes"
+        apiGroups:
+        - "*"
+        clusters:
+        - "ctp-*"
+    resourceInclusions: |
+      - apiGroups:
+        - "*"
+        kinds:
+        - Provider
+        - Function
+        - Configuration
+        - CompositeResourceDefinition
+        - Composition
+        clusters:
+        - "ctp-*"
     providerConfigName: configuration-gitops-argocd
     source:
       git:
-        url: https://github.com/haarchri/gitops-argocd.git
-        path: configuration-gitops-argocd/infrastructure.yaml
+        url: https://github.com/upbound/configuration-gitops-argocd.git
+        path: gitops
         ref:
           name: HEAD

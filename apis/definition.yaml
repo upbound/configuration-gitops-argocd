@@ -31,6 +31,12 @@ spec:
                     oidcConfig:
                       type: string
                       description: set oidc config for argocd server
+                    resourceInclusions:
+                      type: string
+                      description: configure the list of included resources
+                    resourceExclusions:
+                      type: string
+                      description: configure the list of exclude resources
                     deletionPolicy:
                       description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
                       enum:

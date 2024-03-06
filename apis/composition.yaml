@@ -62,7 +62,32 @@ spec:
                                 message = "Provisioning ..."
                               }
 
+                              local function contains (table, val)
+                                for i, v in ipairs(table) do
+                                  if v == val then
+                                    return true
+                                  end
+                                end
+                                return false
+                              end
+
+                              local has_no_status = {
+                                "ProviderConfig",
+                                "ProviderConfigUsage"
+                              }
+
+                              if obj.status == nil and contains(has_no_status, obj.kind) then
+                                health_status.status = "Healthy"
+                                health_status.message = "Resource is up-to-date."
+                                return health_status
+                              end
+
                               if obj.status == nil or obj.status.conditions == nil then
+                                if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+                                  health_status.status = "Healthy"
+                                  health_status.message = "Resource is in use."
+                                  return health_status
+                                end
                                 return health_status
                               end
 
@@ -101,6 +126,27 @@ spec:
                                 message = "Provisioning ..."
                               }
 
+                              local function contains (table, val)
+                                for i, v in ipairs(table) do
+                                  if v == val then
+                                    return true
+                                  end
+                                end
+                                return false
+                              end
+
+                              local has_no_status = {
+                                "Composition",
+                                "CompositionRevision",
+                                "DeploymentRuntimeConfig",
+                                "ControllerConfig"
+                              }
+                              if obj.status == nil and contains(has_no_status, obj.kind) then
+                                  health_status.status = "Healthy"
+                                  health_status.message = "Resource is up-to-date."
+                                return health_status
+                              end
+
                               if obj.status == nil or obj.status.conditions == nil then
                                 return health_status
                               end
@@ -122,7 +168,7 @@ spec:
                                   end
                                 end
 
-                                if condition.type == "Ready" then
+                                if contains({"Ready", "Healthy", "Offered", "Established"}, condition.type) then
                                   if condition.status == "True" then
                                     health_status.status = "Healthy"
                                     health_status.message = "Resource is up-to-date."
@@ -132,11 +178,6 @@ spec:
                               end
 
                               return health_status
-                        resource.exclusions: |
-                          - kinds:
-                            - ProviderConfigUsage
-                            apiGroups:
-                            - "*"
                       params:
                         application.namespaces: cluster-*
                     controller:
@@ -205,6 +246,12 @@ spec:
                 fromFieldPath: spec.parameters.oidcConfig
                 toFieldPath: spec.forProvider.values.server.config[oidc.config]
               - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.resourceInclusions
+                toFieldPath: spec.forProvider.values.configs.cm[resource.inclusions]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.resourceExclusions
+                toFieldPath: spec.forProvider.values.configs.cm[resource.exclusions]
+              - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.operators.argocd.version
                 toFieldPath: spec.forProvider.chart.version
               - type: FromCompositeFieldPath
@@ -247,14 +294,12 @@ spec:
                         spec:
                           destination:
                             namespace: '{{.namespace}}'
-                            server: https://kubernetes.default.svc
-                          project: default
-                          sources:
-                            - chart: '{{.chart}}'
-                              helm:
-                                releaseName: '{{.releaseName}}'
-                              repoURL: '{{.repoUrl}}'
-                              targetRevision: '{{.version}}'
+                            server: '{{.server}}'
+                          project: '{{.project}}'
+                          source:
+                            repoURL: '{{.repoUrl}}'
+                            targetRevision: '{{.version}}'
+                            path: '{{.folder}}'
                           syncPolicy:
                             automated:
                               selfHeal: true
