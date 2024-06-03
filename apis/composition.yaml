@@ -190,34 +190,6 @@ spec:
                           annotations:
                             prometheus.io/scrape: true
                       replicas: 1
-                      # Get Auth working for Upbound
-                      volumes:
-                        - name: up-plugin
-                          emptyDir: {}
-                        - name: up-home
-                          emptyDir: {}
-                      volumeMounts:
-                        - name: up-plugin
-                          mountPath: /usr/local/bin/up
-                          subPath: up
-                        - name: up-home
-                          mountPath: /home/argocd/.up
-                      initContainers:
-                        - name: up-plugin
-                          command:
-                            - sh
-                            - -c
-                          args:
-                            - wget -qO /plugin/up https://cli.upbound.io/build/main/v0.31.0-rc.0.22.gcd944f6/bin/${OS}_${ARCH}/up && chmod +x /plugin/up
-                          image: alpine:3.8
-                          env:
-                            - name: ARCH
-                              value: arm64  # TODO: fix this upstream https://github.com/upbound/up/issues/530
-                            - name: OS
-                              value: linux
-                          volumeMounts:
-                            - name: up-plugin
-                              mountPath: /plugin
                     dex:
                       enabled: false
                     redis-ha:
@@ -256,35 +228,6 @@ spec:
                         requests:
                           cpu: 100m
                           memory: 256Mi
-                      # Get Auth working for Upbound
-                      volumes:
-                        - name: up-plugin
-                          emptyDir: {}
-                        - name: up-home
-                          emptyDir: {}
-                      volumeMounts:
-                        - name: up-plugin
-                          mountPath: /usr/local/bin/up
-                          subPath: up
-                        - name: up-home
-                          mountPath: /home/argocd/.up
-                      initContainers:
-                        - name: up-plugin
-                          command:
-                            - sh
-                            - -c
-                          args:
-                            - wget -qO /plugin/up https://cli.upbound.io/build/main/v0.31.0-rc.0.22.gcd944f6/bin/${OS}_${ARCH}/up && chmod +x /plugin/up
-                          image: alpine:3.8
-                          env:
-                            - name: ARCH
-                              value: arm64  # TODO: fix this upstream https://github.com/upbound/up/issues/530
-                            - name: OS
-                              value: linux
-                          volumeMounts:
-                            - name: up-plugin
-                              mountPath: /plugin
-
             patches:
               - type: PatchSet
                 patchSetName: Common
