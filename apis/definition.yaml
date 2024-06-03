@@ -61,7 +61,7 @@ spec:
                       type: object
                       default:
                         argocd:
-                          version: "7.0.0"
+                          version: "7.1.1"
                       properties:
                         argocd:
                           description: Configuration for the ArgoCD operator.
@@ -70,7 +70,7 @@ spec:
                             version:
                               description: ArgoCD helm-chart version to run.
                               type: string
-                              default: "7.0.0"
+                              default: "7.1.1"
                           required:
                             - version
                     source:
