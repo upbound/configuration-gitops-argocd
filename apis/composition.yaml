@@ -214,6 +214,8 @@ spec:
                       autoscaling:
                         enabled: true
                         minReplicas: 1
+                      ingress:
+                        enabled: true
                       metrics:
                         enabled: true
                         service:
@@ -226,11 +228,12 @@ spec:
                         requests:
                           cpu: 100m
                           memory: 256Mi
-                      service:
-                        type: LoadBalancer
             patches:
               - type: PatchSet
                 patchSetName: Common
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.ingressUrl
+                toFieldPath: spec.forProvider.values.global.domain
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.ingressUrl
                 toFieldPath: spec.forProvider.values.server.url
