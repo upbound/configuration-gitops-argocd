@@ -180,6 +180,7 @@ spec:
                               return health_status
                       params:
                         application.namespaces: cluster-*
+                        server.insecure: true
                     controller:
                       env:
                         - name: ARGOCD_K8S_CLIENT_QPS
@@ -216,6 +217,14 @@ spec:
                         minReplicas: 1
                       ingress:
                         enabled: true
+                        ingressClassName: nginx
+                        tls: true
+                      certificate:
+                        enabled: true
+                        issuer:
+                          group: cert-manager.io
+                          kind: Issuer
+                          name: letsencrypt-prod
                       metrics:
                         enabled: true
                         service:
