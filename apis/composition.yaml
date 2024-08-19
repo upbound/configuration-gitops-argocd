@@ -257,7 +257,7 @@ spec:
                     dex:
                       enabled: false
                     redis-ha:
-                      enabled: true
+                      enabled: false
                     repoServer:
                       autoscaling:
                         enabled: true
