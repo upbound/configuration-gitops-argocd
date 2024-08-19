@@ -11,7 +11,9 @@ PLATFORMS ?= linux_amd64
 # ====================================================================================
 # Setup Kubernetes tools
 
-UP_VERSION = v0.25.0
+KUBECTL_VERSION=v1.30.2
+KIND_VERSION=v0.23.0
+UP_VERSION = v0.32.0
 UP_CHANNEL = stable
 UPTEST_VERSION = v0.11.1
 
@@ -74,8 +76,8 @@ yamllint:
 	@yamllint ./apis || $(FAIL)
 	@$(OK) running yamllint
 
-.PHONY: uptest e2e render yamllint
-
 # This target requires passing XPKG_TOKEN
 login:
-  $(UP) login --token $(XPKG_TOKEN)
+	$(UP) login --token $(XPKG_TOKEN)
+
+.PHONY: uptest e2e render yamllint
