@@ -75,3 +75,7 @@ yamllint:
 	@$(OK) running yamllint
 
 .PHONY: uptest e2e render yamllint
+
+# This target requires passing XPKG_TOKEN
+login:
+        $(UP) login --token $(XPKG_TOKEN)
