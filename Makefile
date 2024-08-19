@@ -78,4 +78,4 @@ yamllint:
 
 # This target requires passing XPKG_TOKEN
 login:
-        $(UP) login --token $(XPKG_TOKEN)
+  $(UP) login --token $(XPKG_TOKEN)
