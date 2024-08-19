@@ -1,4 +1,4 @@
-apiVersion: gitops.platform.upbound.io/v1alpha1
+apiVersion: platform.jlasut.io/v1alpha1
 kind: XArgo
 metadata:
   name: configuration-gitops-argocd
@@ -37,7 +37,7 @@ spec:
     providerConfigName: configuration-gitops-argocd
     source:
       git:
-        url: https://github.com/upbound/configuration-gitops-argocd.git
+        url: https://github.com/jonasz-lasut/configuration-gitops-argocd.git
         path: gitops
         ref:
           name: HEAD

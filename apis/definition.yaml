@@ -1,9 +1,9 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xargo.gitops.platform.upbound.io
+  name: xargo.platform.jlasut.io
 spec:
-  group: gitops.platform.upbound.io
+  group: platform.jlasut.io
   names:
     kind: XArgo
     plural: xargo

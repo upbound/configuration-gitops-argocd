@@ -4,13 +4,13 @@ metadata:
   name: configuration-gitops-argocd
   annotations:
     meta.crossplane.io/maintainer: Upbound <support@upbound.io>
-    meta.crossplane.io/source: github.com/upbound/configuration-gitops-argocd
+    meta.crossplane.io/source: github.com/jonasz-lasut/configuration-gitops-argocd
     meta.crossplane.io/license: Apache-2.0
     meta.crossplane.io/description: |
       This Crossplane configuration is a starting point to use gitops in your own internal cloud.
     meta.crossplane.io/readme: |
       This Crossplane configuration is a starting point to use gitops in your own internal cloud.
-      To learn more checkout the [GitHub repo](https://github.com/upbound/configuration-gitops-argocd/)
+      To learn more checkout the [GitHub repo](https://github.com/jonasz-lasut/configuration-gitops-argocd/)
       that you can copy and customize to meet the exact needs of your organization!
 spec:
   crossplane:

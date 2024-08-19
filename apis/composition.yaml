@@ -1,13 +1,13 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xargo.gitops.platform.upbound.io
+  name: xargo.platform.jlasut.io
   labels:
     type: gitops
 spec:
   writeConnectionSecretsToNamespace: upbound-system
   compositeTypeRef:
-    apiVersion: gitops.platform.upbound.io/v1alpha1
+    apiVersion: platform.jlasut.io/v1alpha1
     kind: XArgo
   mode: Pipeline
   pipeline:
@@ -55,6 +55,70 @@ spec:
                       cm:
                         application.resourceTrackingMethod: annotation
                         resource.customizations: |
+                          "*.jlasut.io/*":
+                            health.lua: |
+                              health_status = {
+                                status = "Progressing",
+                                message = "Provisioning ..."
+                              }
+
+                              local function contains (table, val)
+                                for i, v in ipairs(table) do
+                                  if v == val then
+                                    return true
+                                  end
+                                end
+                                return false
+                              end
+
+                              local has_no_status = {
+                                "ProviderConfig",
+                                "ProviderConfigUsage"
+                              }
+
+                              if obj.status == nil and contains(has_no_status, obj.kind) then
+                                health_status.status = "Healthy"
+                                health_status.message = "Resource is up-to-date."
+                                return health_status
+                              end
+
+                              if obj.status == nil or obj.status.conditions == nil then
+                                if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+                                  health_status.status = "Healthy"
+                                  health_status.message = "Resource is in use."
+                                  return health_status
+                                end
+                                return health_status
+                              end
+
+                              for i, condition in ipairs(obj.status.conditions) do
+                                if condition.type == "LastAsyncOperation" then
+                                  if condition.status == "False" then
+                                    health_status.status = "Degraded"
+                                    health_status.message = condition.message
+                                    return health_status
+                                  end
+                                end
+
+                                if condition.type == "Synced" then
+                                  if condition.status == "False" then
+                                    health_status.status = "Degraded"
+                                    health_status.message = condition.message
+                                    return health_status
+                                  end
+                                end
+
+                                if condition.type == "Ready" then
+                                  if condition.status == "True" then
+                                    health_status.status = "Healthy"
+                                    health_status.message = "Resource is up-to-date."
+                                    return health_status
+                                  end
+                                end
+                              end
+
+                              return health_status
+                        
                           "*.upbound.io/*":
                             health.lua: |
                               health_status = {

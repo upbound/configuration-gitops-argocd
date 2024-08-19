@@ -1,6 +1,6 @@
 # Project Setup
 PROJECT_NAME := configuration-gitops-argocd
-PROJECT_REPO := github.com/upbound/$(PROJECT_NAME)
+PROJECT_REPO := github.com/jonasz-lasut/$(PROJECT_NAME)
 
 # NOTE(hasheddan): the platform is insignificant here as Configuration package
 # images are not architecture-specific. We constrain to one platform to avoid
