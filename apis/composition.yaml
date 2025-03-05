@@ -53,6 +53,9 @@ spec:
                       replicaCount: 1
                     configs:
                       cm:
+                        # https://docs.upbound.io/mcp/gitops/#configure-argo-cd
+                        resource.respectRBAC: normal
+                        # https://docs.upbound.io/mcp/gitops/#configure-argo-cd
                         application.resourceTrackingMethod: annotation
                         resource.customizations: |
                           "*.upbound.io/*":
@@ -181,6 +184,28 @@ spec:
                       params:
                         application.namespaces: cluster-*
                     controller:
+                      # https://docs.upbound.io/mcp/gitops/#add-the-up-cli-init-container-to-argo
+                      volumes:
+                        - name: up-plugin
+                          emptyDir: {}
+                        - name: up-home
+                          emptyDir: {}
+                      volumeMounts:
+                        - name: up-plugin
+                          mountPath: /usr/local/bin/up
+                          subPath: up
+                        - name: up-home
+                          mountPath: /home/argocd/.up
+                      initContainers:
+                        - name: up-plugin
+                          image: xpkg.upbound.io/upbound/up-cli:v0.39.0-0.rc.0.102.g3f384b68
+                          command: ["cp"]
+                          args:
+                            - /usr/local/bin/up
+                            - /plugin/up
+                          volumeMounts:
+                            - name: up-plugin
+                              mountPath: /plugin
                       env:
                         - name: ARGOCD_K8S_CLIENT_QPS
                           value: "300"
@@ -211,6 +236,28 @@ spec:
                           cpu: 100m
                           memory: 256Mi
                     server:
+                      # https://docs.upbound.io/mcp/gitops/#add-the-up-cli-init-container-to-argo
+                      volumes:
+                        - name: up-plugin
+                          emptyDir: {}
+                        - name: up-home
+                          emptyDir: {}
+                      volumeMounts:
+                        - name: up-plugin
+                          mountPath: /usr/local/bin/up
+                          subPath: up
+                        - name: up-home
+                          mountPath: /home/argocd/.up
+                      initContainers:
+                        - name: up-plugin
+                          image: xpkg.upbound.io/upbound/up-cli:v0.39.0-0.rc.0.102.g3f384b68
+                          command: ["cp"]
+                          args:
+                            - /usr/local/bin/up
+                            - /plugin/up
+                          volumeMounts:
+                            - name: up-plugin
+                              mountPath: /plugin
                       autoscaling:
                         enabled: true
                         minReplicas: 1

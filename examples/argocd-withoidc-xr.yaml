@@ -1,0 +1,45 @@
+apiVersion: gitops.platform.upbound.io/v1alpha1
+kind: XArgo
+metadata:
+  name: configuration-gitops-argocd
+  annotations:
+    render.crossplane.io/composition-path: apis/composition.yaml
+    render.crossplane.io/function-path: examples/functions.yaml
+spec:
+  parameters:
+    ingressUrl: configuration-gitops-argocd.example.com
+    oidcConfig: |
+      name: Keycloak
+      issuer: https://configuration-gitops-argocd.example.com/realms/master
+      clientID: argocd
+      clientSecret: 0000000000000000000
+      requestedScopes: ['openid', 'profile', 'email', 'groups']
+    resourceExclusions: |
+      - kinds:
+        - ProviderConfigUsage
+        apiGroups:
+        - "*"
+      - kinds:
+        - "Nodes"
+        apiGroups:
+        - "*"
+        clusters:
+        - "ctp-*"
+    resourceInclusions: |
+      - apiGroups:
+        - "*"
+        kinds:
+        - Provider
+        - Function
+        - Configuration
+        - CompositeResourceDefinition
+        - Composition
+        clusters:
+        - "ctp-*"
+    providerConfigName: configuration-gitops-argocd
+    source:
+      git:
+        url: https://github.com/upbound/configuration-gitops-argocd.git
+        path: gitops
+        ref:
+          name: HEAD
