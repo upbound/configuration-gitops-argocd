@@ -1,0 +1,33 @@
+apiVersion: meta.dev.upbound.io/v2alpha1
+kind: Project
+metadata:
+  name: configuration-gitops-argocd
+spec:
+  apiDependencies:
+  - k8s:
+      version: v1.33.0
+    type: k8s
+  crossplane:
+    version: '>=v1.14.1'
+  dependsOn:
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Provider
+    package: xpkg.upbound.io/upbound/provider-helm
+    version: v0
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Provider
+    package: xpkg.upbound.io/upbound/provider-kubernetes
+    version: v0
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Function
+    package: xpkg.upbound.io/crossplane-contrib/function-auto-ready
+    version: '>=v0.0.0'
+  description: This Crossplane configuration is a starting point to use ArgoCD gitops
+    in your own internal cloud.
+  license: Apache-2.0
+  maintainer: Upbound <support@upbound.io>
+  readme: |
+    This Crossplane configuration is a starting point to use ArgoCD gitops in your own internal cloud.
+    To learn more checkout the GitHub repo that you can copy and customize to meet the exact needs of your organization!
+  repository: xpkg.upbound.io/upbound/configuration-gitops-argocd
+  source: github.com/upbound/configuration-gitops-argocd
