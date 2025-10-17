@@ -1,0 +1,379 @@
+import models.io.crossplane.helm.v1beta1 as helmv1beta1
+import models.io.crossplane.kubernetes.v1alpha2 as kubernetesv1alpha2
+
+oxr = option("params").oxr
+_ocds = option("params").ocds
+
+_metadata = lambda name: str -> any {
+    { annotations = { "krm.kcl.dev/composition-resource-name" = name }}
+}
+
+# Extract parameters from XR
+providerConfigName = oxr.spec.parameters.providerConfigName
+deletionPolicy = oxr.spec.parameters.deletionPolicy
+argocdVersion = oxr.spec?.parameters?.operators?.argocd?.version or "7.1.1"
+ingressUrl = oxr.spec?.parameters?.ingressUrl
+oidcConfig = oxr.spec?.parameters?.oidcConfig
+resourceInclusions = oxr.spec?.parameters?.resourceInclusions
+resourceExclusions = oxr.spec?.parameters?.resourceExclusions
+gitUrl = oxr.spec.parameters.source.git.url
+gitPath = oxr.spec?.parameters?.source?.git?.path
+gitRefName = oxr.spec.parameters.source.git.ref.name
+
+_items = [
+    helmv1beta1.Release{
+        metadata = {
+            annotations = {
+                "krm.kcl.dev/composition-resource-name" = "releaseArgo"
+                "crossplane.io/external-name" = "argocd"
+            }
+        }
+        spec = {
+            deletionPolicy = deletionPolicy
+            providerConfigRef = {
+                name = providerConfigName
+            }
+            forProvider = {
+                chart = {
+                    name = "argo-cd"
+                    repository = "https://argoproj.github.io/argo-helm"
+                    version = argocdVersion
+                }
+                namespace = "argocd"
+                values = {
+                    applicationSet = {
+                        metrics = {
+                            enabled = True
+                            service = {
+                                annotations = {
+                                    "prometheus.io/scrape" = "true"
+                                }
+                            }
+                        }
+                        replicaCount = 1
+                    }
+                    configs = {
+                        cm = {
+                            "resource.respectRBAC" = "normal"
+                            "application.resourceTrackingMethod" = "annotation"
+                            "resource.customizations" = """
+"*.upbound.io/*":
+  health.lua: |
+    health_status = {
+      status = "Progressing",
+      message = "Provisioning ..."
+    }
+
+    local function contains (table, val)
+      for i, v in ipairs(table) do
+        if v == val then
+          return true
+        end
+      end
+      return false
+    end
+
+    local has_no_status = {
+      "ProviderConfig",
+      "ProviderConfigUsage"
+    }
+
+    if obj.status == nil and contains(has_no_status, obj.kind) then
+      health_status.status = "Healthy"
+      health_status.message = "Resource is up-to-date."
+      return health_status
+    end
+
+    if obj.status == nil or obj.status.conditions == nil then
+      if obj.kind == "ProviderConfig" and obj.status.users ~= nil then
+        health_status.status = "Healthy"
+        health_status.message = "Resource is in use."
+        return health_status
+      end
+      return health_status
+    end
+
+    for i, condition in ipairs(obj.status.conditions) do
+      if condition.type == "LastAsyncOperation" then
+        if condition.status == "False" then
+          health_status.status = "Degraded"
+          health_status.message = condition.message
+          return health_status
+        end
+      end
+
+      if condition.type == "Synced" then
+        if condition.status == "False" then
+          health_status.status = "Degraded"
+          health_status.message = condition.message
+          return health_status
+        end
+      end
+
+      if condition.type == "Ready" then
+        if condition.status == "True" then
+          health_status.status = "Healthy"
+          health_status.message = "Resource is up-to-date."
+          return health_status
+        end
+      end
+    end
+
+    return health_status
+
+"*.crossplane.io/*":
+  health.lua: |
+    health_status = {
+      status = "Progressing",
+      message = "Provisioning ..."
+    }
+
+    local function contains (table, val)
+      for i, v in ipairs(table) do
+        if v == val then
+          return true
+        end
+      end
+      return false
+    end
+
+    local has_no_status = {
+      "Composition",
+      "CompositionRevision",
+      "DeploymentRuntimeConfig",
+      "ControllerConfig"
+    }
+    if obj.status == nil and contains(has_no_status, obj.kind) then
+        health_status.status = "Healthy"
+        health_status.message = "Resource is up-to-date."
+      return health_status
+    end
+
+    if obj.status == nil or obj.status.conditions == nil then
+      return health_status
+    end
+
+    for i, condition in ipairs(obj.status.conditions) do
+      if condition.type == "LastAsyncOperation" then
+        if condition.status == "False" then
+          health_status.status = "Degraded"
+          health_status.message = condition.message
+          return health_status
+        end
+      end
+
+      if condition.type == "Synced" then
+        if condition.status == "False" then
+          health_status.status = "Degraded"
+          health_status.message = condition.message
+          return health_status
+        end
+      end
+
+      if contains({"Ready", "Healthy", "Offered", "Established"}, condition.type) then
+        if condition.status == "True" then
+          health_status.status = "Healthy"
+          health_status.message = "Resource is up-to-date."
+          return health_status
+        end
+      end
+    end
+
+    return health_status
+"""
+                            **({url: "https://{}".format(ingressUrl)} if ingressUrl else {})
+                            **({"resource.inclusions": resourceInclusions} if resourceInclusions else {})
+                            **({"resource.exclusions": resourceExclusions} if resourceExclusions else {})
+                        }
+                        params = {
+                            "application.namespaces" = "cluster-*"
+                        }
+                    }
+                    controller = {
+                        volumes = [
+                            {name = "up-plugin", emptyDir = {}}
+                            {name = "up-home", emptyDir = {}}
+                        ]
+                        volumeMounts = [
+                            {name = "up-plugin", mountPath = "/usr/local/bin/up", subPath = "up"}
+                            {name = "up-home", mountPath = "/home/argocd/.up"}
+                        ]
+                        initContainers = [
+                            {
+                                name = "up-plugin"
+                                image = "xpkg.upbound.io/upbound/up-cli:v0.39.0-0.rc.0.102.g3f384b68"
+                                command = ["cp"]
+                                args = ["/usr/local/bin/up", "/plugin/up"]
+                                volumeMounts = [{name = "up-plugin", mountPath = "/plugin"}]
+                            }
+                        ]
+                        env = [
+                            {name = "ARGOCD_K8S_CLIENT_QPS", value = "300"}
+                        ]
+                        metrics = {
+                            enabled = True
+                            service = {
+                                annotations = {
+                                    "prometheus.io/scrape" = "true"
+                                }
+                            }
+                        }
+                        replicas = 1
+                    }
+                    dex = {
+                        enabled = False
+                    }
+                    "redis-ha" = {
+                        enabled = True
+                    }
+                    repoServer = {
+                        autoscaling = {
+                            enabled = True
+                            minReplicas = 1
+                        }
+                        metrics = {
+                            enabled = True
+                            service = {
+                                annotations = {
+                                    "prometheus.io/scrape" = "true"
+                                }
+                            }
+                        }
+                        resources = {
+                            limits = {
+                                cpu = "200m"
+                                memory = "512Mi"
+                            }
+                            requests = {
+                                cpu = "100m"
+                                memory = "256Mi"
+                            }
+                        }
+                    }
+                    server = {
+                        volumes = [
+                            {name = "up-plugin", emptyDir = {}}
+                            {name = "up-home", emptyDir = {}}
+                        ]
+                        volumeMounts = [
+                            {name = "up-plugin", mountPath = "/usr/local/bin/up", subPath = "up"}
+                            {name = "up-home", mountPath = "/home/argocd/.up"}
+                        ]
+                        initContainers = [
+                            {
+                                name = "up-plugin"
+                                image = "xpkg.upbound.io/upbound/up-cli:v0.39.0-0.rc.0.102.g3f384b68"
+                                command = ["cp"]
+                                args = ["/usr/local/bin/up", "/plugin/up"]
+                                volumeMounts = [{name = "up-plugin", mountPath = "/plugin"}]
+                            }
+                        ]
+                        autoscaling = {
+                            enabled = True
+                            minReplicas = 1
+                        }
+                        ingress = {
+                            enabled = True
+                        }
+                        metrics = {
+                            enabled = True
+                            service = {
+                                annotations = {
+                                    "prometheus.io/scrape" = "true"
+                                }
+                            }
+                        }
+                        resources = {
+                            limits = {
+                                cpu = "200m"
+                                memory = "512Mi"
+                            }
+                            requests = {
+                                cpu = "100m"
+                                memory = "256Mi"
+                            }
+                        }
+                        **({config: {"oidc.config": oidcConfig}} if oidcConfig else {})
+                        **({url: ingressUrl} if ingressUrl else {})
+                    }
+                    **({global: {domain: ingressUrl}} if ingressUrl else {})
+                }
+            }
+        }
+    }
+    kubernetesv1alpha2.Object{
+        metadata = {
+            annotations = {
+                "krm.kcl.dev/composition-resource-name" = "argoApplicationSet"
+            }
+        }
+        spec = {
+            deletionPolicy = deletionPolicy
+            providerConfigRef = {
+                name = providerConfigName
+            }
+            forProvider = {
+                manifest = {
+                    apiVersion = "argoproj.io/v1alpha1"
+                    kind = "ApplicationSet"
+                    metadata = {
+                        namespace = "argocd"
+                        name = providerConfigName
+                    }
+                    spec = {
+                        generators = [
+                            {
+                                matrix = {
+                                    generators = [
+                                        {
+                                            git = {
+                                                repoURL = gitUrl
+                                                revision = gitRefName
+                                                files = [
+                                                    {path = gitPath if gitPath else "/"}
+                                                ]
+                                            }
+                                        }
+                                        {
+                                            list = {
+                                                elements = []
+                                                elementsYaml = "{{ .key.components | toJson }}"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                        goTemplate = True
+                        goTemplateOptions = ["missingkey=error"]
+                        template = {
+                            metadata = {
+                                name = "{{.name}}"
+                            }
+                            spec = {
+                                destination = {
+                                    namespace = "{{.namespace}}"
+                                    server = "{{.server}}"
+                                }
+                                project = "{{.project}}"
+                                source = {
+                                    repoURL = "{{.repoUrl}}"
+                                    targetRevision = "{{.version}}"
+                                    path = "{{.folder}}"
+                                }
+                                syncPolicy = {
+                                    automated = {
+                                        selfHeal = True
+                                    }
+                                    syncOptions = ["CreateNamespace=true"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+]
+
+items = _items
