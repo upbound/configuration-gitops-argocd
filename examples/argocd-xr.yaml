@@ -1,13 +1,15 @@
 apiVersion: gitops.platform.upbound.io/v1alpha1
-kind: XArgo
+kind: Argo
 metadata:
   name: configuration-gitops-argocd
+  namespace: default
   annotations:
     render.crossplane.io/composition-path: apis/composition.yaml
     render.crossplane.io/function-path: examples/functions.yaml
 spec:
   parameters:
     providerConfigName: configuration-gitops-argocd
+    managementPolicies: ["*"]
     source:
       git:
         url: https://github.com/upbound/configuration-gitops-argocd.git

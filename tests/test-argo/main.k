@@ -1,21 +1,21 @@
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 import models.io.upbound.platform.gitops.v1alpha1 as gitopsv1alpha1
-import models.io.crossplane.helm.v1beta1 as helmv1beta1
-import models.io.crossplane.kubernetes.v1alpha2 as kubernetesv1alpha2
+import models.io.crossplane.helmm.v1beta1 as helmv1beta1
+import models.io.crossplane.kubernetesm.v1alpha1 as kubernetesv1alpha1
 
 _items = [
     metav1alpha1.CompositionTest{
-        metadata.name: "test-xargo"
+        metadata.name: "Test 1 - Argo Composition"
         spec = {
             assertResources: [
-                gitopsv1alpha1.XArgo{
+                gitopsv1alpha1.Argo{
                     metadata = {
                         name = "configuration-gitops-argocd"
                     }
                     spec = {
                         parameters = {
                             providerConfigName = "configuration-gitops-argocd"
-                            deletionPolicy = "Delete"
+                            managementPolicies = ["*"]
                             operators = {
                                 argocd = {
                                     version = "7.1.1"
@@ -44,9 +44,10 @@ _items = [
                         }
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "configuration-gitops-argocd"
+                            kind = "ProviderConfig"
                         }
                         forProvider = {
                             namespace = "argocd"
@@ -89,7 +90,7 @@ _items = [
                         }
                     }
                 }
-                kubernetesv1alpha2.Object{
+                kubernetesv1alpha1.Object{
                     metadata = {
                         labels = {
                             "crossplane.io/composite" = "configuration-gitops-argocd"
@@ -99,9 +100,10 @@ _items = [
                         }
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "configuration-gitops-argocd"
+                            kind = "ProviderConfig"
                         }
                         forProvider = {
                             manifest = {

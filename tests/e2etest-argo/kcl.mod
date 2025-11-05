@@ -1,5 +1,5 @@
 [package]
-name = "e2etest-e2etest-xargo"
+name = "e2etest-argo"
 version = "0.0.1"
 
 [dependencies]

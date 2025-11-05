@@ -1,10 +1,5 @@
-
-import models.io.crossplane.helm.v1alpha1 as helmv1alpha1
-import models.io.crossplane.helm.v1beta1 as helmv1beta1
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 import models.io.upbound.platform.gitops.v1alpha1 as gitopsv1alpha1
-import models.k8s.apimachinery.pkg.apis.meta.v1 as metav1
-
 
 _items = [
     metav1alpha1.E2ETest{
@@ -13,14 +8,14 @@ _items = [
             crossplane.autoUpgrade.channel: "Rapid"
             defaultConditions: ["Ready"]
             manifests: [
-                gitopsv1alpha1.XArgo {
+                gitopsv1alpha1.Argo {
                     metadata = {
                         name = "test-argocd-instance"
                     }
                     spec = {
                         parameters = {
                             providerConfigName = "uptest-gitops-argocd-cluster"
-                            deletionPolicy = "Delete"
+                            managementPolicies = ["*"]
                             operators = {
                                 argocd = { version = "7.1.1" }
                             }
@@ -42,7 +37,7 @@ _items = [
                     apiVersion: "pkg.crossplane.io/v1"
                     kind: "Configuration"
                     metadata.name: "configuration-aws-eks"
-                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-eks:v0.19.0"
+                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-eks:v0.21.0"
                 }
                 {
                     apiVersion: "pkg.crossplane.io/v1"

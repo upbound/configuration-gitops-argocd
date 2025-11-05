@@ -1,5 +1,5 @@
 [package]
-name = "xargo"
+name = "compose-argo"
 version = "0.0.1"
 
 [dependencies]
