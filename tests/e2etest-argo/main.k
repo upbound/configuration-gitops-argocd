@@ -42,6 +42,12 @@ _items = [
                     spec.package: "xpkg.upbound.io/upbound/configuration-aws-eks:v2.0.0"
                 }
                 {
+                    apiVersion: "pkg.crossplane.io/v1"
+                    kind: "Configuration"
+                    metadata.name: "configuration-aws-network"
+                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-network:v2.0.0"
+                }
+                {
                     apiVersion: "aws.m.upbound.io/v1beta1"
                     kind: "ProviderConfig"
                     metadata = {
