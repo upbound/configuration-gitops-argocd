@@ -5,12 +5,14 @@ _items = [
     metav1alpha1.E2ETest{
         metadata.name: "argocd-e2e-test"
         spec= {
-            crossplane.autoUpgrade.channel: "Rapid"
+            crossplane.autoUpgrade.channel: "None"
+            crossplane.version = "2.1.3-up.1"
             defaultConditions: ["Ready"]
             manifests: [
                 gitopsv1alpha1.Argo {
                     metadata = {
                         name = "test-argocd-instance"
+                        namespace = "default"
                     }
                     spec = {
                         parameters = {
@@ -37,18 +39,15 @@ _items = [
                     apiVersion: "pkg.crossplane.io/v1"
                     kind: "Configuration"
                     metadata.name: "configuration-aws-eks"
-                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-eks:v0.21.0"
+                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-eks:v2.0.0"
                 }
                 {
-                    apiVersion: "pkg.crossplane.io/v1"
-                    kind: "Configuration"
-                    metadata.name: "configuration-aws-network"
-                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-network:v0.24.0"
-                }
-                {
-                    apiVersion: "aws.upbound.io/v1beta1"
+                    apiVersion: "aws.m.upbound.io/v1beta1"
                     kind: "ProviderConfig"
-                    metadata.name: "default"
+                    metadata = {
+                        name = "default"
+                        namespace = "default"
+                    }
                     spec.credentials = {
                         source = "Upbound"
                         upbound = {
@@ -60,8 +59,11 @@ _items = [
                 }
                 {
                     apiVersion: "aws.platform.upbound.io/v1alpha1"
-                    kind: "XNetwork"
-                    metadata.name: "configuration-gitops-argocd-network"
+                    kind: "Network"
+                    metadata = {
+                        name = "configuration-gitops-argocd-network"
+                        namespace = "default"
+                    }
                     spec.parameters = {
                         id: "uptest-gitops-argocd-cluster"
                         region: "us-west-1"
@@ -92,8 +94,11 @@ _items = [
                 }
                 {
                     apiVersion: "aws.platform.upbound.io/v1alpha1"
-                    kind: "XEKS"
-                    metadata.name: "configuration-gitops-argocd-cluster"
+                    kind: "EKS"
+                    metadata = {
+                        name = "configuration-gitops-argocd-cluster"
+                        namespace = "default"
+                    }
                     spec = {
                         parameters = {
                             accessConfig = {
@@ -106,11 +111,7 @@ _items = [
                                 instanceType = "t3.small"
                             }
                             region = "us-west-1"
-                            version = "1.33"
-                        }
-                        writeConnectionSecretToRef = {
-                            name = "configuration-gitops-argocd-kubeconfig"
-                            namespace = "upbound-system"
+                            version = "1.34"
                         }
                     }
                 }

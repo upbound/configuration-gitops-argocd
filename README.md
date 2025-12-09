@@ -14,7 +14,7 @@ In this specific configuration, the API contains:
 
 - **an [ArgoCD](/apis/definition.yaml) custom resource type.**
 - **Composition:** Configured in [/apis/composition.yaml](/apis/composition.yaml)
-- **Embedded Function:** The Composition logic is encapsulated within [embedded function](/functions/xargo/main.k)
+- **Embedded Function:** The Composition logic is encapsulated within [embedded function](/functions/compose-argo/main.k)
 
 ## Deployment
 
@@ -27,8 +27,8 @@ In this specific configuration, the API contains:
 The configuration can be tested using:
 
 - `up composition render --xrd=apis/definition.yaml apis/composition.yaml examples/argocd-xr.yaml` to render the composition
-- `up test run tests/*` to run composition tests in `tests/test-xargo/`
-- `up test run tests/* --e2e` to run end-to-end tests in `tests/e2etest-e2etest-xargo/`
+- `up test run tests/*` to run composition tests in `tests/test-argo/`
+- `up test run tests/* --e2e` to run end-to-end tests in `tests/e2etest-e2etest-argo/`
 
 ## Next steps
 
