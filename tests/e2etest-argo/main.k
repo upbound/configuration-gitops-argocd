@@ -42,27 +42,21 @@ _items = [
                     spec.package: "xpkg.upbound.io/upbound/configuration-aws-eks:v2.0.0"
                 }
                 {
-                    apiVersion: "pkg.crossplane.io/v1"
-                    kind: "Configuration"
-                    metadata.name: "configuration-aws-network"
-                    spec.package: "xpkg.upbound.io/upbound/configuration-aws-network:v2.0.0"
+                    apiVersion: "aws.m.upbound.io/v1beta1"
+                    kind: "ProviderConfig"
+                    metadata = {
+                        name = "default"
+                        namespace = "default"
+                    }
+                    spec.credentials = {
+                        source = "Upbound"
+                        upbound = {
+                            webIdentity = {
+                                roleARN = "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                            }
+                        }
+                    }
                 }
-                # {
-                #     apiVersion: "aws.m.upbound.io/v1beta1"
-                #     kind: "ProviderConfig"
-                #     metadata = {
-                #         name = "default"
-                #         namespace = "default"
-                #     }
-                #     spec.credentials = {
-                #         source = "Upbound"
-                #         upbound = {
-                #             webIdentity = {
-                #                 roleARN = "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
-                #             }
-                #         }
-                #     }
-                # }
                 {
                     apiVersion: "aws.platform.upbound.io/v1alpha1"
                     kind: "Network"
