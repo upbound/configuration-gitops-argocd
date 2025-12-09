@@ -16,7 +16,7 @@ _items = [
                     }
                     spec = {
                         parameters = {
-                            providerConfigName = "upbound-aws-providerconfig"
+                            providerConfigName = "uptest-gitops-argocd-cluster"
                             managementPolicies = ["*"]
                             operators = {
                                 argocd = { version = "7.1.1" }
