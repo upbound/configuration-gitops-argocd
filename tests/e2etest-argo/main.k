@@ -12,11 +12,11 @@ _items = [
                 gitopsv1alpha1.Argo {
                     metadata = {
                         name = "test-argocd-instance"
-                        namespace = "default"
+                        namespace = "solutions-e2e-argocd"
                     }
                     spec = {
                         parameters = {
-                            providerConfigName = "uptest-gitops-argocd-cluster"
+                            providerConfigName = "upbound-aws-providerconfig"
                             managementPolicies = ["*"]
                             operators = {
                                 argocd = { version = "7.1.1" }
@@ -35,6 +35,12 @@ _items = [
                 }
             ]
             extraResources: [
+                # Testing Namespace
+                {
+                    apiVersion: "v1"
+                    kind: "Namespace"
+                    metadata.name: "solutions-e2e-argocd"
+                }
                 {
                     apiVersion: "pkg.crossplane.io/v1"
                     kind: "Configuration"
@@ -45,8 +51,8 @@ _items = [
                     apiVersion: "aws.m.upbound.io/v1beta1"
                     kind: "ProviderConfig"
                     metadata = {
-                        name = "default"
-                        namespace = "default"
+                        name = "upbound-aws-providerconfig"
+                        namespace = "solutions-e2e-argocd"
                     }
                     spec.credentials = {
                         source = "Upbound"
@@ -62,10 +68,11 @@ _items = [
                     kind: "Network"
                     metadata = {
                         name = "configuration-gitops-argocd-network"
-                        namespace = "default"
+                        namespace = "solutions-e2e-argocd"
                     }
                     spec.parameters = {
                         id: "uptest-gitops-argocd-cluster"
+                        providerConfigName: "upbound-aws-providerconfig"
                         region: "us-west-1"
                         vpcCidrBlock: "192.168.0.0/16"
                         subnets: [
@@ -97,7 +104,7 @@ _items = [
                     kind: "EKS"
                     metadata = {
                         name = "configuration-gitops-argocd-cluster"
-                        namespace = "default"
+                        namespace = "solutions-e2e-argocd"
                     }
                     spec = {
                         parameters = {
@@ -106,6 +113,7 @@ _items = [
                                 bootstrapClusterCreatorAdminPermissions = True
                             }
                             id = "uptest-gitops-argocd-cluster"
+                            providerConfigName = "upbound-aws-providerconfig"
                             nodes = {
                                 count = 1
                                 instanceType = "t3.small"
