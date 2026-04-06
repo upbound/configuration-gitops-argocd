@@ -1,12 +1,13 @@
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: xargo.gitops.platform.upbound.io
+  name: argo.gitops.platform.upbound.io
 spec:
+  scope: Namespaced
   group: gitops.platform.upbound.io
   names:
-    kind: XArgo
-    plural: xargo
+    kind: Argo
+    plural: argo
   versions:
     - name: v1alpha1
       served: true
@@ -37,13 +38,18 @@ spec:
                     resourceExclusions:
                       type: string
                       description: configure the list of exclude resources
-                    deletionPolicy:
-                      description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
-                      enum:
-                        - Delete
-                        - Orphan
-                      type: string
-                      default: Delete
+                    managementPolicies:
+                      description: ManagementPolicies for the RDS resources. Defaults to ["*"] which includes all operations (Create, Observe, Update, Delete). To orphan resources on deletion, use ["Create", "Observe", "Update"].
+                      type: array
+                      items:
+                        type: string
+                        enum:
+                          - "*"
+                          - Create
+                          - Observe
+                          - Update
+                          - Delete
+                      default: ["*"]                      
                     kubeConfigSecretRef:
                       description: The KubeConfig for reconciling the Kustomization on a
                         remote cluster.
@@ -100,5 +106,5 @@ spec:
                         - git
                   required:
                     - providerConfigName
-                    - deletionPolicy
+                    - managementPolicies
                     - source

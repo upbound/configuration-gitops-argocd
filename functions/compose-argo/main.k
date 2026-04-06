@@ -1,5 +1,5 @@
-import models.io.crossplane.helm.v1beta1 as helmv1beta1
-import models.io.crossplane.kubernetes.v1alpha2 as kubernetesv1alpha2
+import models.io.crossplane.helmm.v1beta1 as helmv1beta1
+import models.io.crossplane.kubernetesm.v1alpha1 as kubernetesv1alpha1
 
 oxr = option("params").oxr
 _ocds = option("params").ocds
@@ -10,7 +10,7 @@ _metadata = lambda name: str -> any {
 
 # Extract parameters from XR
 providerConfigName = oxr.spec.parameters.providerConfigName
-deletionPolicy = oxr.spec.parameters.deletionPolicy
+managementPolicies = oxr.spec.parameters.managementPolicies
 argocdVersion = oxr.spec?.parameters?.operators?.argocd?.version or "7.1.1"
 ingressUrl = oxr.spec?.parameters?.ingressUrl
 oidcConfig = oxr.spec?.parameters?.oidcConfig
@@ -29,9 +29,10 @@ _items = [
             }
         }
         spec = {
-            deletionPolicy = deletionPolicy
+            managementPolicies = managementPolicies
             providerConfigRef = {
                 name = providerConfigName
+                kind = "ProviderConfig"
             }
             forProvider = {
                 chart = {
@@ -301,16 +302,17 @@ _items = [
             }
         }
     }
-    kubernetesv1alpha2.Object{
+    kubernetesv1alpha1.Object{
         metadata = {
             annotations = {
                 "krm.kcl.dev/composition-resource-name" = "argoApplicationSet"
             }
         }
         spec = {
-            deletionPolicy = deletionPolicy
+            managementPolicies = managementPolicies
             providerConfigRef = {
                 name = providerConfigName
+                kind = "ProviderConfig"
             }
             forProvider = {
                 manifest = {

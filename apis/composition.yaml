@@ -3,16 +3,16 @@ kind: Composition
 metadata:
   labels:
     type: gitops
-  name: xargo.gitops.platform.upbound.io
+  name: argo.gitops.platform.upbound.io
 spec:
   compositeTypeRef:
     apiVersion: gitops.platform.upbound.io/v1alpha1
-    kind: XArgo
+    kind: Argo
   mode: Pipeline
   pipeline:
   - functionRef:
-      name: upbound-configuration-gitops-argocdxargo
-    step: xargo
+      name: upbound-configuration-gitops-argocdcompose-argo
+    step: Compose-Argo
   - functionRef:
       name: crossplane-contrib-function-auto-ready
     step: auto-ready
